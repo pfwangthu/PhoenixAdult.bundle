@@ -47,7 +47,7 @@ def search(results, lang, siteNum, searchData):
         sceneID = None
 
     url = PAsearchSites.getSearchSearchURL(siteNum) + '?x-algolia-application-id=I6P9Q9R18E&x-algolia-api-key=08396b1791d619478a55687b4deb48b4'
-    if sceneID and not searchData.title:
+    if sceneID:
         searchResults = [getNaughtyAmerica(sceneID)]
     else:
         searchResults = getAlgolia(url, 'nacms_combined_production', 'query=' + searchData.title)
@@ -88,8 +88,9 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
 
     # Tagline and Collection(s)
     metadata.collections.clear()
-    metadata.collections.add(metadata.studio)
-    metadata.collections.add(detailsPageElements['site'])
+    tagline = detailsPageElements['site']
+    metadata.tagline = tagline
+    metadata.collections.add(tagline)
 
     # Release Date
     date_object = detailsPageElements['published_at']

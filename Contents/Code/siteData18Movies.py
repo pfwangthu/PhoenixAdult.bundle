@@ -27,6 +27,8 @@ def search(results, lang, siteNum, searchData):
     searchPages = re.search(r'(?<=pages:\s).*(?=])', req.text)
     if searchPages:
         numSearchPages = int(searchPages.group(0))
+        if numSearchPages > 10:
+            numSearchPages = 10
     else:
         numSearchPages = 1
 
@@ -130,6 +132,10 @@ def search(results, lang, siteNum, searchData):
         detailsPageElements = HTML.ElementFromString(req.text)
         urlID = re.sub(r'.*/', '', movieURL)
 
+        if not detailsPageElements:
+            Log('Possible IP BAN: Retry on VPN')
+            break
+
         # Studio
         try:
             studio = detailsPageElements.xpath('//b[contains(., "Network")]//following-sibling::b')[0].text_content().strip()
@@ -203,6 +209,10 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     req = PAutils.HTTPRequest(sceneURL)
     detailsPageElements = HTML.ElementFromString(req.text)
 
+    if not detailsPageElements:
+        Log('Possible IP BAN: Retry on VPN')
+        return metadata
+
     if len(metadata_id) > 3:
         Log('Switching to Data18Scenes')
         siteData18Scenes.update(metadata, lang, siteNum, movieGenres, movieActors, art)
@@ -265,12 +275,16 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     movieActors.clearActors()
     actors = detailsPageElements.xpath('//b[contains(., "Cast")]//following::div//a[contains(@href, "/pornstars/")]//img')
     actors.extend(detailsPageElements.xpath('//b[contains(., "Cast")]//following::div//img[contains(@data-original, "user")]'))
+    actors.extend(detailsPageElements.xpath('//h3[contains(., "Cast")]//following::div[@style]//img'))
     for actorLink in actors:
         actorName = actorLink.xpath('./@alt')[0].strip()
-        actorPhotoURL = actorLink.xpath('./@data-src')[0].strip()
+        try:
+            actorPhotoURL = actorLink.xpath('./@data-src')[0].strip()
+        except:
+            break
 
-        if actorName:
-            movieActors.addActor(actorName, actorPhotoURL)
+        actorPhotoURL = ''
+        movieActors.addActor(actorName, actorPhotoURL)
 
     # Director
     metadata.directors.clear()
@@ -322,7 +336,7 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
         if not PAsearchSites.posterAlreadyExists(posterUrl, metadata):
             # Download image file for analysis
             try:
-                image = PAutils.HTTPRequest(posterUrl, headers={'Referer': 'http://www.data18.com'})
+                image = PAutils.HTTPRequest(posterUrl, headers={'Referer': 'http://i.dt18.com'})
                 images.append(image)
                 im = StringIO(image.content)
                 resized_image = Image.open(im)
