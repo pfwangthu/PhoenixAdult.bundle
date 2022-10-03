@@ -55,7 +55,7 @@ def search(results, lang, siteNum, searchData):
     for searchResult in searchResults:
         titleNoFormatting = PAutils.parseTitle(searchResult['title'], siteNum)
         curID = searchResult['id']
-        releaseDate = datetime.fromtimestamp(searchResult['published_at']).strftime('%Y-%m-%d')
+        releaseDate = searchResult['published_at'].strftime('%Y-%m-%d')
         siteName = searchResult['site']
 
         if sceneID:
